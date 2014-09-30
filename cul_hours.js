@@ -52,7 +52,7 @@
          // Toggle between showing a list of all libraries and only those that are currently open
          $('#showOption').click( function() {
             if ($('#showOption button').html() == "Show only what's open") {
-               var numHidden = $('li.closed').size();
+               var numHidden = $('span.library-closed').size();
                $('#showOption button').html('Show all libraries');
                $('#showNote').html('(Hiding ' + numHidden + (numHidden == 1 ? ' library)' : ' libraries)'));
             }
@@ -60,7 +60,8 @@
                $('#showOption button').html("Show only what's open");
                $('#showNote').html('');
             }
-            $('.closed').toggle();
+            // Show/hide the parent div ('unit-library') for any closed libraries
+            $('span.library-closed').closest('div.unit-library').toggle();
          });
 
          // Parameterize the URL query parameters, using the code from

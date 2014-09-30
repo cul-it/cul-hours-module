@@ -990,11 +990,11 @@ function cul_hours_dailyHoursFromId($id) {
     # or has both open and closing times (0).
     if ($result && $result->override == 1) {
       $output = "<span>Today:</span> Open all day";
-      $output .= '   <span class="label label-success">Open</span>';
+      $output .= '   <span class="label label-success library-open">Open</span>';
     }
     elseif ($result && $result->override ==2) {
       $output = "<span>Today:</span> Closed all day";
-      $output .= '   <span class="label label-danger">Closed</span>';
+      $output .= '   <span class="label label-danger library-closed">Closed</span>';
     }
     elseif ($result) {
       $script_tz = date_default_timezone_get();
@@ -1043,10 +1043,10 @@ function cul_hours_dailyHoursFromId($id) {
       }
 
       if ($open_now === TRUE) {
-        $output .= '   <span class="label label-success">Open</span>';
+        $output .= '   <span class="label label-success library-open">Open</span>';
       }
       else {
-        $output .= '   <span class="label label-danger">Closed</span>';
+        $output .= '   <span class="label label-danger library-closed">Closed</span>';
       }
 
       date_default_timezone_set($script_tz);
