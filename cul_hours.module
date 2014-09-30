@@ -1016,7 +1016,7 @@ function cul_hours_dailyHoursFromId($id) {
       }
 
       $output = '<span>Today:</span> ';
-      $open_now = (_cul_hours_isopen($lib_name) === 1); // Whether library is currently open
+      $open_now = ( _cul_hours_isopen($lib_name) === 1 ); // Whether library is currently open
       # Check whether the library is starting open but closing during the day
       if ($result->startTime == null && $result->endTime != null) {
         $end  = date("g:i a", $result->endTime);
