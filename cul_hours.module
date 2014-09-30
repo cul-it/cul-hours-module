@@ -1009,25 +1009,25 @@ function cul_hours_dailyHoursFromId($id) {
       }
 
       $output = '<span>Today:</span> ';
-      $open_now = (_cul_hours_isopen($id) === 1); // Whether library is currently open
+      //$open_now = (_cul_hours_isopen($id) === 1); // Whether library is currently open
       # Check whether the library is starting open but closing during the day
       if ($result->startTime == null && $result->endTime != null) {
         $end  = date("g:i a", $result->endTime);
         $output .= "Closes at $end";
-        //$open_now = ($ITHACA_now < $result->endTime);
+        $open_now = ($ITHACA_now < $result->endTime);
       }
       # Check whether the library is starting closed but ending the day open
       elseif ($result->endTime == null && $result->startTime != null) {
         $start = date("g:i a", $result->startTime);
         $output .= "Opens at $start";
-        //$open_now = ($ITHACA_now > $result->startTime);
+        $open_now = ($ITHACA_now >= $result->startTime);
       }
       # Else normal business
       else {
         $start = date("g:i a", $result->startTime);
         $end  = date("g:i a", $result->endTime);
         $output .= "$start - $end";
-        //$open_now = ($ITHACA_now > $result->startTime && $ITHACA_now < $result->endTime);
+        $open_now = ($ITHACA_now >= $result->startTime && $ITHACA_now < $result->endTime);
 
         //debugging code:
         $details = array(
