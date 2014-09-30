@@ -177,6 +177,8 @@ function _cul_hours_isopen($name) {
   global $abbrev_map;
   global $host;
 
+  if (!array_key_exists($name, $abbrev_map)) return FALSE;
+
   $name = trim($name);
   // Query the web service for current status
   $url = $host . "/LibServices/showLibraryHoursStatus.do?location=" . urlencode($abbrev_map[$name]) . "&date=" . date('Y-m-d') . '&start=' . date('H:i:s') . "&end=" . date('H:i:s') . "&output=json";
@@ -968,6 +970,8 @@ function theme_cul_hours_formatter_cul_hours_field_hours_id($element) {
 }
 
 function cul_hours_dailyHoursFromId($id) {
+  global $abbrev_map;
+  $lib_name = array_search($id, $abbrev_map);
   $id = urlencode($id);
   $output = 'unknown result';
 
@@ -1012,7 +1016,7 @@ function cul_hours_dailyHoursFromId($id) {
       }
 
       $output = '<span>Today:</span> ';
-      $open_now = (_cul_hours_isopen($id) === 1); // Whether library is currently open
+      $open_now = (_cul_hours_isopen($lib_name) === 1); // Whether library is currently open
       # Check whether the library is starting open but closing during the day
       if ($result->startTime == null && $result->endTime != null) {
         $end  = date("g:i a", $result->endTime);
