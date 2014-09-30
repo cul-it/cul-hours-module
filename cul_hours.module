@@ -169,6 +169,8 @@ function cul_hours_exit() {
 /**
  * Determine whether the specified library is open currently.
  * $name = library name (as specified in the unit library's node)
+ * assumes hours are in Ithaca time zone!!!
+ * use date_default_timezone_set()
  */
 function _cul_hours_isopen($name) {
   global $abbrev_map;
@@ -967,14 +969,6 @@ function theme_cul_hours_formatter_cul_hours_field_hours_id($element) {
 function cul_hours_dailyHoursFromId($id) {
   $id = urlencode($id);
   $output = 'unknown result';
-  $UTC_now = time();
-  $offset = variable_get('cul_hours_time_offset', 0);
-
-  // if debugging (offset not 0) set cache to expire asap
-  $cache_expire_minutes = ($offset == 0) ? 5 : 1;
-  if ($offset != 0) {
-    $UTC_now += ($offset * 60 * 60);
-  }
 
   # Hacks for 'static' library hours
   if ($id == 'Engineering') {
@@ -1003,26 +997,37 @@ function cul_hours_dailyHoursFromId($id) {
       $output .= '   <span class="label label-danger">Closed</span>';
     }
     elseif ($result) {
+      $script_tz = date_default_timezone_get();
+      date_default_timezone_set('America/New_York'); //show hours in Ithaca time
+      $ITHACA_now = time();
+      $offset = variable_get('cul_hours_time_offset', 0);
+
+      // if debugging (offset not 0) set cache to expire asap
+      $cache_expire_minutes = ($offset == 0) ? 5 : 1;
+      if ($offset != 0) {
+        $ITHACA_now += ($offset * 60 * 60);
+      }
+
       $output = '<span>Today:</span> ';
-      $open_now = (_cul_hours_isopen($id) == 1); // Whether library is currently open
+      $open_now = (_cul_hours_isopen($id) === 1); // Whether library is currently open
       # Check whether the library is starting open but closing during the day
       if ($result->startTime == null && $result->endTime != null) {
         $end  = date("g:i a", $result->endTime);
         $output .= "Closes at $end";
-        //$open_now = (cul_hours < $result->endTime);
+        //$open_now = ($ITHACA_now < $result->endTime);
       }
       # Check whether the library is starting closed but ending the day open
       elseif ($result->endTime == null && $result->startTime != null) {
         $start = date("g:i a", $result->startTime);
         $output .= "Opens at $start";
-        //$open_now = ($UTC_now > $result->startTime);
+        //$open_now = ($ITHACA_now > $result->startTime);
       }
       # Else normal business
       else {
         $start = date("g:i a", $result->startTime);
         $end  = date("g:i a", $result->endTime);
         $output .= "$start - $end";
-        //$open_now = ($UTC_now > $result->startTime && $UTC_now < $result->endTime);
+        //$open_now = ($ITHACA_now > $result->startTime && $ITHACA_now < $result->endTime);
 
         //debugging code:
         $details = array(
@@ -1030,7 +1035,7 @@ function cul_hours_dailyHoursFromId($id) {
           "@start" => $start,
           "@end" => $end,
           "@output" => $output,
-          "@currentTime" => $UTC_now,
+          "@currentTime" => $ITHACA_now,
           "@open_now" => $open_now,
           );
         watchdog('cul_hours', '@id: Start @start; End @end; Output @output; Timestamp @userTimestamp; Time @currentTime; Open? @open_now', $details, WATCHDOG_NOTICE, 'link');
@@ -1043,10 +1048,14 @@ function cul_hours_dailyHoursFromId($id) {
       else {
         $output .= '   <span class="label label-danger">Closed</span>';
       }
+
+      date_default_timezone_set($script_tz);
     }
 
     // cache expires after $cache_expire_minutes min
-    cache_set('daily_hours_'.$id, $output, 'cache', $UTC_now + (60 * $cache_expire_minutes));
+    $cache_time = "+$cache_expire_minutes minutes";
+    $expire = strtotime($cache_time, time());
+    cache_set('daily_hours_' . $id, $output, 'cache', $expire));
   }
   return $output;
 }
