@@ -998,6 +998,8 @@ function cul_hours_dailyHoursFromId($id) {
     }
     elseif ($result) {
       $script_tz = date_default_timezone_get();
+      date_default_timezone_set('UTC');
+      $UTC_now = time();
       date_default_timezone_set('America/New_York'); //show hours in Ithaca time
       $ITHACA_now = time();
       $offset = variable_get('cul_hours_time_offset', 0);
@@ -1014,20 +1016,20 @@ function cul_hours_dailyHoursFromId($id) {
       if ($result->startTime == null && $result->endTime != null) {
         $end  = date("g:i a", $result->endTime);
         $output .= "Closes at $end";
-        $open_now = ($ITHACA_now < $result->endTime);
+        $open_now = ($UTC_now < $result->endTime);
       }
       # Check whether the library is starting closed but ending the day open
       elseif ($result->endTime == null && $result->startTime != null) {
         $start = date("g:i a", $result->startTime);
         $output .= "Opens at $start";
-        $open_now = ($ITHACA_now >= $result->startTime);
+        $open_now = ($UTC_now >= $result->startTime);
       }
       # Else normal business
       else {
         $start = date("g:i a", $result->startTime);
         $end  = date("g:i a", $result->endTime);
         $output .= "$start - $end";
-        $open_now = ($ITHACA_now >= $result->startTime && $ITHACA_now < $result->endTime);
+        $open_now = ($UTC_now >= $result->startTime && $UTC_now < $result->endTime);
 
         //debugging code:
         $details = array(
