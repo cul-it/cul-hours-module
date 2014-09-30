@@ -987,6 +987,8 @@ function cul_hours_dailyHoursFromId($id) {
    $output = $cache->data;
   }
   else {
+    $cache_expire_minutes = 5;
+
     # Grab the output from the today's hours service
     $url = "http://mannservices.mannlib.cornell.edu/LibServices/showLibraryHoursToday.do?location=$id&output=json";
     $result = json_decode(file_get_contents($url));
