@@ -177,7 +177,11 @@ function _cul_hours_isopen($name) {
   global $abbrev_map;
   global $host;
 
-  if (!array_key_exists($name, $abbrev_map)) return FALSE;
+  if (empty($name) || !array_key_exists($name, $abbrev_map)) {
+    $msg = "_cul_hours_isopen : missing key '$name' ";
+    watchdog('cul_hours', "_cul_hours_isopen : missing key '@name' ", array('@name' => $name), WATCHDOG_NOTICE, 'link');
+    return FALSE;
+  }
 
   $name = trim($name);
   // Query the web service for current status
