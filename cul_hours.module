@@ -1055,7 +1055,7 @@ function cul_hours_dailyHoursFromId($id) {
     // cache expires after $cache_expire_minutes min
     $cache_time = "+$cache_expire_minutes minutes";
     $expire = strtotime($cache_time, time());
-    cache_set('daily_hours_' . $id, $output, 'cache', $expire));
+    cache_set('daily_hours_' . $id, $output, 'cache', $expire);
   }
   return $output;
 }
