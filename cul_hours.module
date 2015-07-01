@@ -46,8 +46,8 @@ function cul_hours_init() {
 
     //     'Medical Center Archives' => 'Medical',
     'Engineering Library' => 'ENGR',
-    'Olin Library' => 'OLIN',
     'Geneva Experiment Station Library' => 'GENEVA',
+    'Olin Library' => 'OLIN',
     'Industrial and Labor Relations Library' => 'ILR',
     'ILR Library' => 'ILR',
     'Library Annex' => 'ANNEX',
@@ -232,10 +232,201 @@ function cul_hours_menu() {
     'type' => MENU_NORMAL_ITEM,
   );
 
+  $items['hours/printable'] = array(
+    'title' => '',
+    'description' => 'Printable hours page',
+    'page callback' => 'cul_hours_custom_print',
+    'access callback' => TRUE,
+    'type' => MENU_NORMAL_ITEM
+    
+  );
+
 
   return $items;
 
 }
+
+/* 
+ * Create a page that lists hours for a specified library and academic term.
+ */
+ function cul_hours_custom_print($library = 'all', $semester = 'all') {
+   
+   global $host;
+   global $abbrev_map;
+   $reverse_map = array_flip($abbrev_map);
+   $html = '';
+   $download_link = '';
+   
+   if ($semester == 'all') {
+     $html = file_get_contents("$host/LibServices/showLibraryHoursForAcademicYear.do?location=$library&output=xhtml");
+   }
+   else {
+     $formatted_semester = cul_hours_format_semester($semester);
+     $html = file_get_contents("$host/LibServices/showLibraryHoursForAcademicSemester.do?location=$library&semester=$formatted_semester&output=xhtml");
+     $download_link = "$host/LibServices/showLibraryHoursForAcademicSemester.do?location=$library&semester=$formatted_semester&output=pdf";
+   }
+   
+   if (trim($html) == '') {
+     $html = t('Error: No hours listing is available for those parameters.');
+   }
+   elseif ($download_link != '') {
+     $html = "<a href='$download_link'>" . '<button type="submit" class="btn btn-default">Download a PDF of this schedule</button></a><br/><br/>' . $html;
+   }
+   
+   // Replace generic title with something better
+   $semester = cul_hours_format_semester($semester);
+   $semester = preg_replace('/\+/', ' ', $semester);
+   $library = $reverse_map[$library];
+   $html = preg_replace('/Library Hours for Academic Semester/', "$library Schedule for $semester", $html);
+   
+   return $html;
+ }
+ 
+ /*
+  * Implements hook_block_info()
+  */
+function cul_hours_block_info() {
+  $block['hours_printable'] = array(
+    'info' => t('Printable Hours'),
+    'cache' => DRUPAL_NO_CACHE
+  );
+  return $block;
+}
+
+/*
+ * Implements hook_block_view()
+ */
+ function cul_hours_block_view($block_key) {
+   $block = array();
+   
+   if ($block_key == 'hours_printable') {
+     $block['subject'] = t('Print Library Hours');
+     $block['content'] = drupal_get_form('cul_hours_printable_form');
+   }
+   
+   return $block;
+ }
+ 
+ /*
+  * implements hook_form()
+  */
+function cul_hours_printable_form($form, &$form_state) {
+  
+  global $abbrev_map;
+  $reverse_map = $abbrev_map;
+  ksort($reverse_map);
+  $reverse_map = array_flip($reverse_map);
+  unset($reverse_map['PHYSCI']);
+  unset($reverse_map['ENGR']);
+  
+  $form['library_select'] = array(
+    '#type' => 'select',
+    '#title' => t('Library'),
+    '#options' => $reverse_map
+  );
+  
+  $form['term_select'] = array(
+    '#type' => 'select',
+    '#title' => t('Term'),
+    '#options' => array(
+      //'all'=> 'Current academic year',
+      'SP' => 'Spring',
+      'SU' => 'Summer',
+      'FA' => 'Fall',
+      'WI' => 'Winter'
+    )
+  );
+  
+  $current_year = intval(date('Y'));
+  $current_abbr = substr($current_year, 2);
+  $last_year = $current_year - 1;
+  $next_year = $current_year + 1;
+  $form['year_select'] = array(
+    '#type' => 'select',
+    '#title' => t('Year'),
+    '#options' => array(
+      substr($last_year, 2) => $last_year,
+      $current_abbr => $current_year,
+      substr($next_year, 2) => $next_year
+    ),
+    // ? Why doesn't this work ?
+    '#default_value' => $current_abbr
+  );
+    
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('View Schedule')
+  );
+  
+  return $form;
+}
+
+/*
+ * Implements hook_form_submit()
+ */
+function cul_hours_printable_form_submit($form, &$form_state) {
+  
+  $library = $form_state['values']['library_select'];
+  $year = $form_state['values']['year_select'];
+  $term = $form_state['values']['term_select'];
+  // $term == all is a special case that indicates that we should print
+  // the entire academic year rather than a single semester. In that case,
+  // we don't need to specify the year.
+  if ($term != 'all') {
+    $term .= $year;
+  }
+  drupal_goto("hours/printable/$library/$term");
+}
+ 
+/*
+ * Format a term abbreviation (e.g., 'FA14') as an expanded term and year
+ * that the hours service can use (e.g., 'Fall 2014')
+ */
+function cul_hours_format_semester($semester) {
+  
+  list($term, $year) = str_split($semester, 2);
+  
+  $output = '';
+  switch ($term) {
+    case 'SP':
+      $output = "Spring+20$year";
+      break;
+    case 'SU':
+      $output = "Summer+20$year";
+      break;
+    case 'FA':
+      $output = "Fall+20$year";
+      break;
+    case 'WI':
+      $next_year = intval($year);
+      $next_year++;
+      $output = "Winter+20$year-$next_year";
+      break;
+  }
+  
+  return $output;
+  
+}
+
+/*
+ * Figure out (approximately) which term we're currently in
+ */
+// function cul_hours_current_term() {
+//   $current_date = new DateTime();
+//   $current_year = date('Y');
+//   if ($current_date < new DateTime("$current_year-01-15")) {
+//     return 'WI';
+//   }
+//   elseif ($current_date < new DateTime("$current_year-05-20")) {
+//     return 'SP';
+//   }
+//   elseif ($current_date < new DateTime("$current_year-08-20")) {
+//     return 'SU';
+//   }
+//   elseif ($current_date < new DateTime("current_year-12-18")) {
+//     return ''
+//   }
+// }
 
 /**
  * Callback function to handle AJAX request to retrieve details about a specific library's hours
