@@ -249,16 +249,26 @@ function cul_hours_menu() {
 /* 
  * Create a page that lists hours for a specified library and academic term.
  */
- function cul_hours_custom_print($library = 'all', $semester = 'all') {
+ function cul_hours_custom_print($library = 'all', $semester = 'current') {
    
    global $host;
    global $abbrev_map;
-   $reverse_map = array_flip($abbrev_map);
+   $reverse_map = array('all' => 'All Libraries') + array_flip($abbrev_map);
    $html = '';
    $download_link = '';
    
    if ($semester == 'all') {
      $html = file_get_contents("$host/LibServices/showLibraryHoursForAcademicYear.do?location=$library&output=xhtml");
+   }
+   elseif ($library == 'all') {
+     // User wants all libraries listed
+    //  $libraries = array_keys($reverse_map);
+    //  foreach ($libraries as $library) {
+    //    //$html 
+    //  }
+     $semester = 'current';
+     $html = file_get_contents("$host/LibServices/showAllLibraryHoursForAcademicSemester.do?output=xhtml&locationId=0");
+     $download_link = "$host/LibServices/showAllLibraryHoursForAcademicSemester.do?output=pdf&locationId=0";
    }
    else {
      $formatted_semester = cul_hours_format_semester($semester);
@@ -273,11 +283,19 @@ function cul_hours_menu() {
      $html = "<a href='$download_link'>" . '<button type="submit" class="btn btn-default">Download a PDF of this schedule</button></a><br/><br/>' . $html;
    }
    
+   if ($semester == 'current') {
+     $date = date('F jS, Y'); // e.g., 'March 20th, 2015'
+   }
    // Replace generic title with something better
-   $semester = cul_hours_format_semester($semester);
-   $semester = preg_replace('/\+/', ' ', $semester);
-   $library = $reverse_map[$library];
-   $html = preg_replace('/Library Hours for Academic Semester/', "$library Schedule for $semester", $html);
+   if ($date) {
+     $html = "<h1>Schedule for All Libraries as of $date</h1>" . $html;
+   }
+   else {
+     $semester = cul_hours_format_semester($semester);
+     $semester = preg_replace('/\+/', ' ', $semester);
+     $library = $reverse_map[$library];
+     $html = preg_replace('/Library Hours for Academic Semester/', "$library Schedule for $semester", $html);
+   }
    
    return $html;
  }
@@ -318,6 +336,10 @@ function cul_hours_printable_form($form, &$form_state) {
   $reverse_map = array_flip($reverse_map);
   unset($reverse_map['PHYSCI']);
   unset($reverse_map['ENGR']);
+  
+  $form['shortcut'] = array(
+    '#markup' => '<a href="hours/printable/all">View or print current semester hours for all libraries</a><br/>or select<br/>'
+  );
   
   $form['library_select'] = array(
     '#type' => 'select',
