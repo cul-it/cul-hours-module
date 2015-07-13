@@ -338,7 +338,7 @@ function cul_hours_printable_form($form, &$form_state) {
   unset($reverse_map['ENGR']);
   
   $form['shortcut'] = array(
-    '#markup' => '<a href="hours/printable/all">View or print current semester hours for all libraries</a><br/>or select<br/>'
+    '#markup' => '<p><a href="hours/printable/all">View or print current semester hours for all libraries</a> or select:</p>'
   );
   
   $form['library_select'] = array(
