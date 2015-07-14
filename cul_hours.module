@@ -257,6 +257,7 @@ function cul_hours_menu() {
    $html = '';
    $download_link = '';
    
+   $library = urlencode($library);
    if ($semester == 'all') {
      $html = file_get_contents("$host/LibServices/showLibraryHoursForAcademicYear.do?location=$library&output=xhtml");
    }
