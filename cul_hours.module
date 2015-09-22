@@ -1200,6 +1200,9 @@ function cul_hours_dailyHoursFromId($id) {
   elseif ($id == 'PhysSci') {
    $output = "24/7 quiet study space only";
   }
+  elseif ($id == 'weill') {
+    $output = '';
+  }
   # We really don't want to be doing a lot of calculations in a view, so use the cache
   elseif (($cache = cache_get('daily_hours_'.$id) !== FALSE) && !empty($cache->data)) {
    $output = $cache->data;

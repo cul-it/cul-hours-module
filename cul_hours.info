@@ -4,6 +4,6 @@ description = "Dynamic library hours display for all CUL locations"
 package = "Cornell University Library"
 core = 7.x
 php = 5.1
-version = "7.x-1.6"
+version = "7.x-1.7"
 dependencies[] = date_api
 configure = 'admin/config/cul_hours'
