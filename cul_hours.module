@@ -725,7 +725,7 @@ function theme_cul_hours_default($variables) {
     $output .= '<span class="hoursnote">' . $hoursPackage->note . '</span><br/>';
   }
 
-  $output .= '</div><!--regularHours-->' . "\n";
+  $output .= '<!--regularHours-->' . "\n";
 
   return $output;
 }
