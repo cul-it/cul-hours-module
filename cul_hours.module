@@ -319,7 +319,7 @@ function cul_hours_block_info() {
    $block = array();
    
    if ($block_key == 'hours_printable') {
-     $block['subject'] = t('Print Library Hours');
+     $block['subject'] = t('Hours');
      $block['content'] = drupal_get_form('cul_hours_printable_form');
    }
    
@@ -339,7 +339,7 @@ function cul_hours_printable_form($form, &$form_state) {
   unset($reverse_map['ENGR']);
   
   $form['shortcut'] = array(
-    '#markup' => '<p><a href="hours/printable/all">View or print current semester hours for all libraries</a> or select:</p>'
+    '#markup' => '<p><a href="hours/printable/all">View this semester\'s hours for all libraries</a></p>'
   );
   
   $form['library_select'] = array(
