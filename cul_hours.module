@@ -278,7 +278,7 @@ function cul_hours_menu() {
    }
    
    if (trim($html) == '') {
-     $html = t('Error: No hours listing is available for those parameters.');
+     $html = t('Sorry, there are no hours available for your selection.');
    }
    elseif ($download_link != '') {
      $html = "<a href='$download_link'>" . '<button type="submit" class="btn btn-default">Download a PDF of this schedule</button></a><br/><br/>' . $html;
