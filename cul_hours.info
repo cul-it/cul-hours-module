@@ -1,6 +1,6 @@
 ; $Id$
 name = "CUL Hours"
-description = "Dynamic library hours display for all CUL locations"
+description = "Provide today's hours and open/closed status for unit libraries"
 package = "Cornell University Library"
 core = 7.x
 php = 5.1
