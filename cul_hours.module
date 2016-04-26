@@ -1188,9 +1188,11 @@ function theme_cul_hours_formatter_cul_hours_field_hours_id($element) {
 }
 
 function cul_hours_dailyHoursFromId($id) {
-  global $abbrev_map;
-  $lib_name = array_search($id, $abbrev_map);
-  $id = urlencode($id);
+  
+  $libcal_data = &drupal_static(__FUNCTION__);
+  #global $abbrev_map;
+  #$lib_name = $abbrev_map[$id];
+  #$id = urlencode($id);
   $output = 'unknown result';
 
   # Hacks for 'static' library hours
@@ -1203,90 +1205,69 @@ function cul_hours_dailyHoursFromId($id) {
   elseif ($id == 'weill') {
     $output = '';
   }
-  # We really don't want to be doing a lot of calculations in a view, so use the cache
-  elseif (($cache = cache_get('daily_hours_'.$id) !== FALSE) && !empty($cache->data)) {
-   $output = $cache->data;
-  }
   else {
-    $cache_expire_minutes = 5;
-
-    # Grab the output from the today's hours service
-    $url = "http://mannservices.mannlib.cornell.edu/LibServices/showLibraryHoursToday.do?location=$id&output=json";
-    $result = json_decode(file_get_contents($url));
-
-    # override determines whether the library is open all day (1), closed all day (2),
-    # or has both open and closing times (0).
-    if ($result && $result->override == 1) {
-      $output = "<span>Today:</span> Open all day";
-      $output .= '   <span class="label label-success library-open">Open</span>';
-    }
-    elseif ($result && $result->override ==2) {
-      $output = "<span>Today:</span> Closed all day";
-      $output .= '   <span class="label label-danger library-closed">Closed</span>';
-    }
-    elseif ($result) {
-      $script_tz = date_default_timezone_get();
-      date_default_timezone_set('UTC');
-      $UTC_now = time();
-      date_default_timezone_set('America/New_York'); //show hours in Ithaca time
-      $ITHACA_now = time();
-      $offset = variable_get('cul_hours_time_offset', 0);
-
-      // if debugging (offset not 0) set cache to expire asap
-      $cache_expire_minutes = ($offset == 0) ? 5 : 1;
-      if ($offset != 0) {
-        $ITHACA_now += ($offset * 60 * 60);
-      }
-
-      $output = '<span>Today:</span> ';
-      $open_now = ( _cul_hours_isopen($lib_name) === 1 ); // Whether library is currently open
-      # Check whether the library is starting open but closing during the day
-      if ($result->startTime == null && $result->endTime != null) {
-        $end  = date("g:i a", $result->endTime);
-        $output .= "Closes at $end";
-        //$open_now = ($UTC_now < $result->endTime);
-      }
-      # Check whether the library is starting closed but ending the day open
-      elseif ($result->endTime == null && $result->startTime != null) {
-        $start = date("g:i a", $result->startTime);
-        $output .= "Opens at $start";
-        //$open_now = ($UTC_now >= $result->startTime);
-      }
-      # Else normal business
-      else {
-        $start = date("g:i a", $result->startTime);
-        $end  = date("g:i a", $result->endTime);
-        $output .= "$start - $end";
-        //$open_now = ($UTC_now >= $result->startTime && $UTC_now < $result->endTime);
-
-        //debugging code:
-        // $details = array(
-        //   "@id" => $id,
-        //   "@start" => $start,
-        //   "@end" => $end,
-        //   "@output" => $output,
-        //   "@currentTime" => $ITHACA_now,
-        //   "@open_now" => $open_now,
-        //   );
-        // watchdog('cul_hours', '@id: Start @start; End @end; Output @output; Timestamp @userTimestamp; Time @currentTime; Open? @open_now', $details, WATCHDOG_NOTICE, 'link');
-        //...debugging code
-      }
-
-      if ($open_now === TRUE) {
-        $output .= '   <span class="label label-success library-open">Open</span>';
-      }
-      else {
-        $output .= '   <span class="label label-danger library-closed">Closed</span>';
-      }
-
-      date_default_timezone_set($script_tz);
+    // Translate the library name into the ID used by LibCal
+    $libcal_codes = array(
+      'Africana' => 3319,
+      'Fine Arts' => 3321,
+      'Hotel' => 3322,
+      'ILR' => 3323,
+      'Kroch' => 3324,
+      'Rare' => 3325,
+      'Law' => 3315,    // This is the ID for PUBLIC ACCESS to law
+      'ANNEX' => 3326,
+      'JGSM' => 3340,
+      'MANNLIB' => 1707,
+      'MATH' => 3327,
+      'Music' => 3328,
+      'OLIN' => 2818,
+      'Ornithology' => 3329,
+      'Uris' => 2830,
+      'Vet' => 3331
+    );
+    $library_id = $libcal_codes[$id];
+    
+    // The LibCal API provides a parameter (lid) that can be used to query just the hours for
+    // a single library/location. However, there's a weird snag: for a library that has subordinate
+    // locations (e.g., reference desk) and its own lid, the lid returned in the JSON *result* is
+    // a zero (0). That makes it impossible to compare the results against the query, which one
+    // might want to do when, say, only displaying the hours for the main library building. So
+    // instead, we can just do one query to fetch today's hours for all the libraries, and then
+    // cache that result.
+    if (!isset($libcal_data)) {
+      $url = "https://api3.libcal.com/api_hours_today.php?iid=973&lid=&format=json";
+      $libcal_data = json_decode(file_get_contents($url));
     }
 
-    // cache expires after $cache_expire_minutes min
-    $cache_time = "+$cache_expire_minutes minutes";
-    $expire = strtotime($cache_time, time());
-    cache_set('daily_hours_' . $id, $output, 'cache', $expire);
+    foreach ($libcal_data->locations as $loc) {
+      // Only do this for the main library building. Libraries may have additonal locations within
+      // the main buildings, but we only want to return daily hours for the main location right now.
+      if ($loc->lid == $library_id) {
+        
+        if ($loc->times->status == 'not-set') {
+          $output = "Today's hours unavailable";
+        }
+        else {
+          $open_now = ($loc->times->currently_open == 'true');
+          
+          $output = $loc->rendered;
+          if ($output == '24 Hours') {
+            $output = 'Open 24 hours';
+          }
+          if ($open_now === TRUE) {
+            $output .= '   <span class="label label-success library-open">Open</span>';
+          }
+          else {
+            $output .= '   <span class="label label-danger library-closed">Closed</span>';
+          }
+        }
+        
+        break;
+      }
+    }
   }
+  #echo "output: $output";
+
   return $output;
 }
 
