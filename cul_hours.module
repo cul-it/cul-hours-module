@@ -1202,7 +1202,7 @@ function cul_hours_dailyHoursFromId($id) {
   elseif ($id == 'PhysSci') {
    $output = "24/7 quiet study space only";
   }
-  elseif ($id == 'weill') {
+  elseif ($id == 'weill' || $id == 'weill-archives') {
     $output = '';
   }
   else {
