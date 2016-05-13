@@ -1235,7 +1235,7 @@ function cul_hours_dailyHoursFromId($id) {
     // instead, we can just do one query to fetch today's hours for all the libraries, and then
     // cache that result.
     if (!isset($libcal_data)) {
-      $url = "https://api3.libcal.com/api_hours_today.php?iid=973&lid=&format=json";
+      $url = "https://api3.libcal.com/api_hours_today.php?iid=973&lid=&format=json&nocache=1";
       $libcal_data = json_decode(file_get_contents($url));
     }
 
