@@ -24,7 +24,8 @@ function cul_hours_init() {
     drupal_add_css($module_path . '/cul_hours.css');
     drupal_add_js($module_path . '/cul_hours.js');
   }
-  drupal_add_js(array('cul_hours' => array('module_path' => $base_url . '/' . drupal_get_path('module', 'cul_hours'))), array('type' => 'setting', 'scope' => JS_DEFAULT)); 
+  $base_url = $GLOBALS['base_url'];
+  drupal_add_js(array('cul_hours' => array('module_path' => $base_url . '/' . drupal_get_path('module', 'cul_hours'))), array('type' => 'setting', 'scope' => JS_DEFAULT));
 }
 
 /**
@@ -40,7 +41,7 @@ function cul_hours_exit() {
     cache_clear_all($base_url . '/' . $_GET['q'], 'cache_page');
   }
 }
- 
+
 /**
  * Callback function for information about this module
  */
@@ -117,7 +118,7 @@ function theme_cul_hours_formatter_cul_hours_field_hours_id($element) {
 }
 
 function cul_hours_dailyHoursFromId($id) {
-  
+
   $libcal_data = &drupal_static(__FUNCTION__);
   $output = 'unknown result';
 
@@ -153,7 +154,7 @@ function cul_hours_dailyHoursFromId($id) {
       'Vet' => 3331
     );
     $library_id = $libcal_codes[$id];
-    
+
     // The LibCal API provides a parameter (lid) that can be used to query just the hours for
     // a single library/location. However, there's a weird snag: for a library that has subordinate
     // locations (e.g., reference desk) and its own lid, the lid returned in the JSON *result* is
@@ -170,13 +171,13 @@ function cul_hours_dailyHoursFromId($id) {
       // Only do this for the main library building. Libraries may have additonal locations within
       // the main buildings, but we only want to return daily hours for the main location right now.
       if ($loc->lid == $library_id) {
-        
+
         if ($loc->times->status == 'not-set') {
           $output = "Today's hours unavailable";
         }
         else {
           $open_now = ($loc->times->currently_open == 'true');
-          
+
           $output = $loc->rendered;
           if ($output == '24 Hours') {
             $output = 'Open 24 hours';
@@ -188,7 +189,7 @@ function cul_hours_dailyHoursFromId($id) {
             $output .= '   <span class="label label-danger library-closed">Closed</span>';
           }
         }
-        
+
         break;
       }
     }
