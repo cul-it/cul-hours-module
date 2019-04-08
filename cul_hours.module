@@ -1216,7 +1216,7 @@ function cul_hours_dailyHoursFromId($id) {
       'Rare' => 3325,
       'Law' => 3315,    // This is the ID for PUBLIC ACCESS to law
       'ANNEX' => 3326,
-      'JGSM' => 3362,   // PUBLIC ACCESS ID
+      'JGSM' => 3340,   // PUBLIC ACCESS ID
       'MANNLIB' => 1707,
       'MATH' => 3327,
       'Music' => 3328,
