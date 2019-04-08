@@ -4,6 +4,6 @@ description = "Provide today's hours and open/closed status for unit libraries"
 package = "Cornell University Library"
 core = 7.x
 php = 5.1
-version = "7.x-2.0"
+version = "7.x-2.1"
 dependencies[] = date_api
 configure = 'admin/config/cul_hours'

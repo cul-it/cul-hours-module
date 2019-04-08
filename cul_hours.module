@@ -144,7 +144,7 @@ function cul_hours_dailyHoursFromId($id) {
       'Law' => 3477,    // This is the ID for PUBLIC ACCESS to law
       'GENEVA' => 3437,
       'ANNEX' => 3326,
-      'JGSM' => 3362,   // PUBLIC ACCESS ID
+      'JGSM' => 10217,   // PUBLIC ACCESS ID
       'MANNLIB' => 1707,
       'MATH' => 3327,
       'Music' => 3328,
