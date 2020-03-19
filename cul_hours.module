@@ -123,11 +123,15 @@ function cul_hours_dailyHoursFromId($id) {
   $output = 'unknown result';
 
   # Hacks for 'static' library hours
+  # Hacks on Hacks for 24 hour areas closed -jgr25
+  $closed24 = 'Closed   <span class="label label-danger library-closed">Closed</span>';
   if ($id == 'Engineering') {
-    $output = "24/7 study space and computing only";
+    //$output = "24/7 study space and computing only";
+    $output = $closed24;
   }
   elseif ($id == 'PhysSci') {
-   $output = "24/7 quiet study space only";
+   //$output = "24/7 quiet study space only";
+   $output = $closed24;
   }
   elseif ($id == 'weill' || $id == 'weill-archives') {
     $output = '';
