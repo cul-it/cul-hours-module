@@ -122,30 +122,6 @@ function cul_hours_dailyHoursFromId($id) {
   $libcal_data = &drupal_static(__FUNCTION__);
   $output = 'unknown result';
 
-  $closed_button = '<span class="label label-danger library-closed">Closed</span>';
-  $pickup = '<span>'.l('Request/pickup service available', '/library-return-campus-faq').'</span>';
-  switch ($id) {
-    case 'ANNEX':
-      // Request/Pickup Service Available
-      $output = implode(' ', [$closed_button, $pickup]);
-      break;
-
-    case 'MANNLIB':
-      $output = implode(' ', [$closed_button, $pickup]);
-      break;
-
-    case 'Uris':
-      $output = implode(' ', [$closed_button, $pickup]);
-      break;
-
-    case 'weill':
-    case 'weill-archives';
-      $output = '';
-      break;
-
-    default:
-      $output = $closed_button;
-      break;
   }
 
   # Hacks for 'static' library hours
