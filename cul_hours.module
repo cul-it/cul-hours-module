@@ -122,84 +122,65 @@ function cul_hours_dailyHoursFromId($id) {
   $libcal_data = &drupal_static(__FUNCTION__);
   $output = 'unknown result';
 
+  if ($id == 'weill' || $id == 'weill-archives') {
+    $output = '';
   }
+  else {
+    // Translate the library name into the ID used by LibCal
+    $libcal_codes = array(
+      'Africana' => 3319,
+      'Fine Arts' => 3321,
+      'Hotel' => 3322,
+      'ILR' => 3323,
+      'Kroch' => 3324,
+      'Rare' => 3325,
+      'Law' => 3477,    // This is the ID for PUBLIC ACCESS to law
+      'GENEVA' => 3437,
+      'ANNEX' => 3326,
+      'JGSM' => 10217,   // PUBLIC ACCESS ID
+      'MANNLIB' => 1707,
+      'MATH' => 3327,
+      'Music' => 3328,
+      'OLIN' => 2818,
+      'Ornithology' => 3329,
+      'Uris' => 2830,
+      'Vet' => 3331,
+      'Engineering' => 7862,
+      'PhysSci' => 10937,
+    );
+    $library_id = $libcal_codes[$id];
 
-  # Hacks for 'static' library hours
-  # Hacks on Hacks for 24 hour areas closed -jgr25
-  // $closed24 = 'Closed   <span class="label label-danger library-closed">Closed</span>';
-  // if ($id == 'Engineering') {
-  //   //$output = "24/7 study space and computing only";
-  //   $output = $closed24;
-  // }
-  // elseif ($id == 'PhysSci') {
-  //  //$output = "24/7 quiet study space only";
-  //  $output = $closed24;
-  // }
-  // elseif ($id == 'weill' || $id == 'weill-archives') {
-  //   $output = '';
-  // }
-  // else {
-  //   // Translate the library name into the ID used by LibCal
-  //   $libcal_codes = array(
-  //     'Africana' => 3319,
-  //     'Fine Arts' => 3321,
-  //     'Hotel' => 3322,
-  //     'ILR' => 3323,
-  //     'Kroch' => 3324,
-  //     'Rare' => 3325,
-  //     'Law' => 3477,    // This is the ID for PUBLIC ACCESS to law
-  //     'GENEVA' => 3437,
-  //     'ANNEX' => 3326,
-  //     'JGSM' => 10217,   // PUBLIC ACCESS ID
-  //     'MANNLIB' => 1707,
-  //     'MATH' => 3327,
-  //     'Music' => 3328,
-  //     'OLIN' => 2818,
-  //     'Ornithology' => 3329,
-  //     'Uris' => 2830,
-  //     'Vet' => 3331
-  //   );
-  //   $library_id = $libcal_codes[$id];
+    // The LibCal API provides a parameter (lid) that can be used to query just the hours for
+    // a single library/location. However, there's a weird snag: for a library that has subordinate
+    // locations (e.g., reference desk) and its own lid, the lid returned in the JSON *result* is
+    // a zero (0). That makes it impossible to compare the results against the query, which one
+    // might want to do when, say, only displaying the hours for the main library building. So
+    // instead, we can just do one query to fetch today's hours for all the libraries, and then
+    // cache that result.
+    if (!isset($libcal_data)) {
+      $url = "https://api3.libcal.com/api_hours_today.php?iid=973&lid=&format=json&nocache=1";
+      $libcal_data = json_decode(file_get_contents($url));
+    }
 
-  //   // The LibCal API provides a parameter (lid) that can be used to query just the hours for
-  //   // a single library/location. However, there's a weird snag: for a library that has subordinate
-  //   // locations (e.g., reference desk) and its own lid, the lid returned in the JSON *result* is
-  //   // a zero (0). That makes it impossible to compare the results against the query, which one
-  //   // might want to do when, say, only displaying the hours for the main library building. So
-  //   // instead, we can just do one query to fetch today's hours for all the libraries, and then
-  //   // cache that result.
-  //   if (!isset($libcal_data)) {
-  //     $url = "https://api3.libcal.com/api_hours_today.php?iid=973&lid=&format=json&nocache=1";
-  //     $libcal_data = json_decode(file_get_contents($url));
-  //   }
+    foreach ($libcal_data->locations as $loc) {
+      // Only do this for the main library building. Libraries may have additonal locations within
+      // the main buildings, but we only want to return daily hours for the main location right now.
+      if ($loc->lid == $library_id) {
 
-  //   foreach ($libcal_data->locations as $loc) {
-  //     // Only do this for the main library building. Libraries may have additonal locations within
-  //     // the main buildings, but we only want to return daily hours for the main location right now.
-  //     if ($loc->lid == $library_id) {
+        $closed_button = '<span class="label label-danger library-closed">Closed</span>';
 
-  //       if ($loc->times->status == 'not-set') {
-  //         $output = "Today's hours unavailable";
-  //       }
-  //       else {
-  //         $open_now = ($loc->times->currently_open == 'true');
+        if ('text' == $loc->times->status) {
+          $message = $loc->times->text;
+          $pickup = '<span>'.l($message, '/library-return-campus-faq').'</span>';
+          $output = implode(' ', [$closed_button, $pickup]);
+        } else {
+          $output = $closed_button;
+        }
 
-  //         $output = $loc->rendered;
-  //         if ($output == '24 Hours') {
-  //           $output = 'Open 24 hours';
-  //         }
-  //         if ($open_now === TRUE) {
-  //           $output .= '   <span class="label label-success library-open">Open</span>';
-  //         }
-  //         else {
-  //           $output .= '   <span class="label label-danger library-closed">Closed</span>';
-  //         }
-  //       }
-
-  //       break;
-  //     }
-  //   }
-  // }
+        break;
+      }
+    }
+  }
   #echo "output: $output";
 
   return $output;
