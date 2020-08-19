@@ -45,7 +45,7 @@ function cul_hours_menu() {
 /**
  * Implements hook_permission().
  */
-function current_posts_permission() {
+function cul_hours_permission() {
   return array(
     'administer cul_hours settings' => array(
       'title' => t('Administer cul_hours settings'),
