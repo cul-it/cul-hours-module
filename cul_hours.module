@@ -30,7 +30,7 @@ function cul_hours_menu() {
 
   $items = array();
 
-  $items['admin/config/content/cul_hours'] = array(
+  $items['admin/config/cul_hours'] = array(
     'title' => 'CUL hours settings',
     'description' => 'Option to reset the hours.',
     'page callback' => 'drupal_get_form',
