@@ -11,6 +11,49 @@
  *
  */
 
+function cul_hours_admin($form, &$form_state) {
+
+  $form['cul_hours_clear'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Clear the cached hours'),
+    '#default_value' => variable_get('cul_hours_clear', 0),
+    '#description' => t("Clear the static cul hours data."),
+  );
+
+  return system_settings_form($form);
+}
+
+/**
+ * implements hook_menu()
+ */
+function cul_hours_menu() {
+
+  $items = array();
+
+  $items['admin/config/content/cul_hours'] = array(
+    'title' => 'CUL hours settings',
+    'description' => 'Option to reset the hours.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('cul_hours_admin'),
+    'access arguments' => array('administer cul_hours settings'),
+    'type' => MENU_NORMAL_ITEM,
+   );
+
+  return $items;
+}
+
+/**
+ * Implements hook_permission().
+ */
+function current_posts_permission() {
+  return array(
+    'administer cul_hours settings' => array(
+      'title' => t('Administer cul_hours settings'),
+    )
+  );
+}
+
+
 /**
  * Implements hook_init()
  */
@@ -157,9 +200,10 @@ function cul_hours_dailyHoursFromId($id) {
     // might want to do when, say, only displaying the hours for the main library building. So
     // instead, we can just do one query to fetch today's hours for all the libraries, and then
     // cache that result.
-    if (!isset($libcal_data)) {
+    if (!isset($libcal_data) || (variable_get('cul_hours_clear', 0) != 0)) {
       $url = "https://api3.libcal.com/api_hours_today.php?iid=973&lid=&format=json&nocache=1";
       $libcal_data = json_decode(file_get_contents($url));
+      variable_set('cul_hours_clear', 0);
     }
 
     foreach ($libcal_data->locations as $loc) {
