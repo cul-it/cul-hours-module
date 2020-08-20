@@ -211,10 +211,17 @@ function cul_hours_dailyHoursFromId($id) {
       // the main buildings, but we only want to return daily hours for the main location right now.
       if ($loc->lid == $library_id) {
 
-        if ('Closed' == $loc->rendered) {
+        if (!isset($loc->times->currently_open) || ($loc->times->currently_open === false)) {
           $closed_button = '<span class="label label-danger library-closed">Closed</span>';
         } else {
-          $closed_button = '';
+          if ('text' == $loc->times->status) {
+            $closed_button = '<span class="label label-success library-open">Open</span>';
+          } else {
+            $closed_button = '<div class="today-hours">';
+            $closed_button .= $loc->rendered . '    ';
+            $closed_button .= '<span class="label label-success library-open">Open</span>';
+            $closed_button .= '</div>';
+          }
         }
         if ('text' == $loc->times->status) {
           $message = $loc->times->text;
