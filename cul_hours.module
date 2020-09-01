@@ -177,7 +177,7 @@ function cul_hours_dailyHoursFromId($id) {
       'ILR' => 3323,
       'Kroch' => 3324,
       'Rare' => 3325,
-      'Law' => 3477,    // This is the ID for PUBLIC ACCESS to law
+      'Law' => 3476,    // This is the ID for Law Library Student Seat Availability (only by reservation)
       'GENEVA' => 3437,
       'ANNEX' => 3326,
       'JGSM' => 10217,   // PUBLIC ACCESS ID
