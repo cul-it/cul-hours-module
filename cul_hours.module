@@ -180,7 +180,7 @@ function cul_hours_dailyHoursFromId($id) {
       'Law' => 3476,    // This is the ID for Law Library Student Seat Availability (only by reservation)
       'GENEVA' => 3437,
       'ANNEX' => 3326,
-      'JGSM' => 10217,   // PUBLIC ACCESS ID
+      'JGSM' => 3340, // Management Library w/Johnson ID
       'MANNLIB' => 1707,
       'MATH' => 3327,
       'Music' => 3328,
