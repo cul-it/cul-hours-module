@@ -225,7 +225,7 @@ function cul_hours_dailyHoursFromId($id) {
         }
         if ('text' == $loc->times->status) {
           $message = $loc->times->text;
-          $pickup = '<span>'.l($message, '/library-return-campus-faq').'</span>';
+          $pickup = '<span>'.l($message, 'https://www.library.cornell.edu/contactless-pickup').'</span>';
           $output = implode(' ', [$closed_button, $pickup]);
         } else {
           $output = $closed_button;
